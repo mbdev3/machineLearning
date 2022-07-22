@@ -1,18 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-
-@author: ad3940
-
-Based on the paper "Credit Card Fraud Detection - Machine Learning methods",
-Varmedja et al, 2019: https://ieeexplore.ieee.org/document/8717766
-"""
-
-
-#%% Classification model
-# https://machinelearningmastery.com/types-of-classification-in-machine-learning/
-
-#%% IMPORTING PACKAGES
-
 import pandas as pd # data processing
 import numpy as np # working with arrays
 import matplotlib.pyplot as plt # visualization
@@ -24,32 +9,19 @@ from imblearn.over_sampling import SMOTE
 
 import warnings
 warnings.filterwarnings("ignore")
-
 from sklearn.preprocessing import StandardScaler # data normalization
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split # data split
-from sklearn.tree import DecisionTreeClassifier # Decision tree algorithm
-from sklearn.neighbors import KNeighborsClassifier # KNN algorithm
-from sklearn.linear_model import LogisticRegression # Logistic regression algorithm
-from sklearn.ensemble import RandomForestClassifier # Random forest tree algorithm
-from xgboost import XGBClassifier # XGBoost algorithm
-from sklearn.naive_bayes import GaussianNB
-from sklearn.neural_network import MLPClassifier
+
+from sklearn.metrics import brier_score_loss  #new
+from sklearn.metrics import balanced_accuracy_score
 
 from sklearn import metrics
 
 
-#%% IMPORTING DATA
-
-# df = pd.read_csv(r'C:\Users\Taoussi\Desktop\cw\AI\creditcard.csv')
 df = pd.read_csv(r'archive/creditcard.csv')
 print(df.head())
 
-
-
-df.shape
-
-#%% EDA
 
 # 1. Count & percentage
 
@@ -66,6 +38,7 @@ print(cl('Fraud cases are : {}'.format(fraud_count), attrs = ['bold']))
 print(cl('Percentage of fraud cases is : {} %'.format(fraud_percentage), attrs = ['bold'],color='green'))
 print(cl('--------------------------------------------', attrs = ['bold']))
 
+
 # 2. Description
 
 nonfraud_cases = df[df.Class == 0]
@@ -79,6 +52,7 @@ print(cl('--------------------------------------------', attrs = ['bold']))
 print(cl('FRAUD CASE AMOUNT STATS', attrs = ['bold']))
 print(fraud_cases.Amount.describe())
 print(cl('--------------------------------------------', attrs = ['bold']))
+
 
 # 3. Distributions
 
@@ -143,6 +117,8 @@ print("y_train_smote: ",y_train_smote.shape)
 print("X_test_smote: ",X_test_smote.shape)
 print("y_test_smote: ",y_test_smote.shape)
 
+
+
 #%% METRICS
 """
 For calculating the performance of each Classification model(with all the five 
@@ -158,11 +134,12 @@ precision_tests = []
 recall_tests = []
 f1_score_tests = []
 mcc_score_tests = []
-#****
 balanced_accuracy_tests = []
-
+top_k_accuracy_tests = []
+cohen_kappa_tests = []
 def performance(model):
     for name, model, X_train, y_train, X_test, y_test in model:
+        
         
         #appending name
         names.append(name)
@@ -176,9 +153,7 @@ def performance(model):
         # calculate accuracy
         Accuracy_test = metrics.accuracy_score(y_test, y_test_pred)
         accuracy_tests.append(Accuracy_test)
-        #*********** balanced_accuracy_score
-        Balanced_Accuracy_test = metrics.balanced_accuracy_score(y_test,y_test_pred)
-        balanced_accuracy_tests.apend(Balanced_Accuracy_test)
+        
         # calculate auc
         Aucs_test = metrics.roc_auc_score(y_test , y_test_pred)
         aucs_tests.append(Aucs_test)
@@ -202,9 +177,25 @@ def performance(model):
         # draw confusion matrix
         cnf_matrix = metrics.confusion_matrix(y_test, y_test_pred) 
         
+         #*********** balanced_accuracy_score
+        Balanced_Accuracy_test = metrics.balanced_accuracy_score(y_test,y_test_pred)
+        balanced_accuracy_tests.append(Balanced_Accuracy_test)
+        #top_k_accuracy
+        
+        Top_K_Accuracy_test = metrics.top_k_accuracy_score(y_test,y_test_pred)
+        top_k_accuracy_tests.append(Top_K_Accuracy_test)
+
+        #cohen_kappa_score
+        Cohen_kappa_test = metrics.cohen_kappa_score(y_test,y_test_pred)
+        cohen_kappa_tests.append(Cohen_kappa_test)
+
         print("Model Name :", name)
         print('Test Accuracy :{0:0.5f}'.format(Accuracy_test))
+        ##
         print('Test Balanced Accuracy :{0:0.5f}'.format(Balanced_Accuracy_test))
+        print('top_k_accuracy_score :{0:0.5f}'.format(Top_K_Accuracy_test))
+        print('cohen_kappa_score :{0:0.5f}'.format(Cohen_kappa_test))
+        ##
         print('Test AUC : {0:0.5f}'.format(Aucs_test))
         print('Test Precision : {0:0.5f}'.format(Precision_score_test))
         print('Test Recall : {0:0.5f}'.format(Recall_score_test))
@@ -225,20 +216,10 @@ def performance(model):
     plt.ylabel('True Positive Rate (Sensitivity)')
     plt.show()
 
-#%% MODELING - CLASSIFICATION ALGORITHMS
-    
-# 1. Logical Regression Classifier
 
+# 1. balanced_accuracy_score
 
-LRmodel=[]
-
-LRmodel.append(('LR IMBALANCED', LogisticRegression(solver='saga',multi_class='multinomial'),X_train, y_train, X_test, y_test))
-LRmodel.append(('LR SMOTE', LogisticRegression(solver='saga',multi_class='multinomial'),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
-
-performance(LRmodel)
-
-# 2. Random Forest Classifier
-
+from sklearn.ensemble import RandomForestClassifier # Random forest tree algorithm
 RFmodel = []
 
 RFmodel.append(('RF IMABALANCED', RandomForestClassifier(),X_train,y_train,X_test,y_test))
@@ -247,54 +228,13 @@ RFmodel.append(('RF SMOTE', RandomForestClassifier(),X_train_smote, y_train_smot
 performance(RFmodel)
 
 
-# 3. Gaussian Naïve Bayes Classifier
-
-NBmodel = []
-
-NBmodel.append(('NB IMBALANCED', GaussianNB(),X_train,y_train,X_test,y_test))
-NBmodel.append(('NB SMOTE', GaussianNB(),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
-
-performance(NBmodel)
-
-# 4. Decision Tree Classifier
-
-DTmodel = []
-
-DTmodel.append(('DT IMBALANCED', DecisionTreeClassifier(),X_train,y_train,X_test,y_test))
-DTmodel.append(('DT SMOTE', DecisionTreeClassifier(),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
-
-performance(DTmodel)
-
-# 5. K-Nearest Neighbor Class
-
-KNNmodel = []
-
-KNNmodel.append(('KNN IMBALANCE', KNeighborsClassifier(),X_train,y_train,X_test,y_test))
-KNNmodel.append(('KNN SMOTE', KNeighborsClassifier(),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
-
-performance(KNNmodel)
-
-# 6. XG Boost Classifier
-
-xgBOOST=[]
-xgBOOST.append(('XGBOOST IMBALANCED', XGBClassifier(n_estimators = 1000, verbosity = 1, scale_pos_weight = 580),X_train, y_train, X_test, y_test))
-xgBOOST.append(('XGBOOST SMOTE', XGBClassifier(n_estimators = 1000, verbosity = 1, scale_pos_weight = 580),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
-
-performance(xgBOOST)
-
-# 7. MLP Classifier
-
-MLPclassifier=[]
-
-MLPclassifier.append(('MLPClassifier IMBALANCE', MLPClassifier(hidden_layer_sizes=(200,), max_iter=10000),X_train,y_train,X_test,y_test))
-MLPclassifier.append(('MLPClassifier SMOTE',MLPClassifier(hidden_layer_sizes=(200,), max_iter=10000),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
-
-performance(MLPclassifier)
-
 # COMPARE MCC SCORE FOR ALL DATASETS
 comparison={
     'Model': names,
     'Accuracy': accuracy_tests,
+    "Balanced Accuracy": balanced_accuracy_tests,
+    "Top K Accuracy": top_k_accuracy_tests,
+     "cohen_kappa_score": cohen_kappa_tests,
     'AUC': aucs_tests,
     'Precision Score' : precision_tests,
     'Recall Score': recall_tests, 
