@@ -177,7 +177,7 @@ def performance(model):
         # draw confusion matrix
         cnf_matrix = metrics.confusion_matrix(y_test, y_test_pred) 
         
-         #*********** balanced_accuracy_score
+        #balanced_accuracy_score
         Balanced_Accuracy_test = metrics.balanced_accuracy_score(y_test,y_test_pred)
         balanced_accuracy_tests.append(Balanced_Accuracy_test)
         #top_k_accuracy

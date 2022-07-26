@@ -291,6 +291,17 @@ MLPclassifier.append(('MLPClassifier SMOTE',MLPClassifier(hidden_layer_sizes=(20
 
 performance(MLPclassifier)
 
+#8. SVM
+
+SVMclassifier=[]
+
+SVMclassifier.append(('SVMclassifier IMBALANCE', SVC(kernel='sigmoid', random_state=42),X_train,y_train,X_test,y_test))
+SVMclassifier.append(('SVMclassifier SMOTE',SVC(kernel='sigmoid', random_state=42),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
+
+performance(SVMclassifier)
+
+from sklearn.svm import SVC
+
 # COMPARE MCC SCORE FOR ALL DATASETS
 comparison={
     'Model': names,
