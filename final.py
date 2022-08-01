@@ -1,4 +1,5 @@
 import pandas as pd # data analysis and manipulation
+import numpy as np #  arrays manipulation
 import matplotlib.pyplot as plt # to create visualizations
 from termcolor import colored as cl # Color formatting for output in terminal
 import seaborn as sns # data vizualization based on matplotlib
