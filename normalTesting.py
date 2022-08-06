@@ -43,10 +43,7 @@ total_time = time.time()
 
 
 df = pd.read_csv(r'archive/creditcard.csv') #importing data
-df = df.loc[1:10000] # limit data to first 10.000 cols
-
-
-
+df = df.loc[1:100000] # limit data to first 10.000 cols
 
 
 
@@ -236,14 +233,14 @@ def performance(model):
     plt.title('ROC curve')
     plt.xlabel('False Positive Rate (1 - Specificity)')
     plt.ylabel('True Positive Rate (Sensitivity)')
-    # plt.show()
+    plt.show()
     
 
 time_result=[]
 list_of_models = ['Logical Regression Classifier','Random Forest Classifier','Gaussian Naïve Bayes Classifier',
                  'Decision Tree Classifier','K-Nearest Neighbor Class','XG Boost Classifier','MLP Classifier'
                  ,'LinearSVC']
-i = 0
+
 
 
 
@@ -251,78 +248,77 @@ i = 0
 
 
 LRmodel=[]
+
 LRmodel.append(('LR IMBALANCED', LogisticRegression(solver='saga',multi_class='multinomial'),X_train, y_train, X_test, y_test))
 LRmodel.append(('LR SMOTE', LogisticRegression(solver='saga',multi_class='multinomial'),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
-
+performance(LRmodel)
 
 RFmodel = []
+
 RFmodel.append(('RF IMABALANCED', RandomForestClassifier(),X_train,y_train,X_test,y_test))
 RFmodel.append(('RF SMOTE', RandomForestClassifier(),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
-
+performance(RFmodel)
 
 NBmodel = []
+
 NBmodel.append(('NB IMBALANCED', GaussianNB(),X_train,y_train,X_test,y_test))
 NBmodel.append(('NB SMOTE', GaussianNB(),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
 
+performance(NBmodel)
 
 DTmodel = []
+
 DTmodel.append(('DT IMBALANCED', DecisionTreeClassifier(),X_train,y_train,X_test,y_test))
 DTmodel.append(('DT SMOTE', DecisionTreeClassifier(),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
+performance(DTmodel)
+
 
 KNNmodel = []
+
 KNNmodel.append(('KNN IMBALANCE', KNeighborsClassifier(),X_train,y_train,X_test,y_test))
 KNNmodel.append(('KNN SMOTE', KNeighborsClassifier(),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
+performance(KNNmodel)
 
 xgBOOST=[]
+
 xgBOOST.append(('XGBOOST IMBALANCED', XGBClassifier(n_estimators = 1000, verbosity = 1, scale_pos_weight = 580),X_train, y_train, X_test, y_test))
 xgBOOST.append(('XGBOOST SMOTE', XGBClassifier(n_estimators = 1000, verbosity = 1, scale_pos_weight = 580),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
+performance(xgBOOST)
 
 MLPclassifier=[]
+
 MLPclassifier.append(('MLPClassifier IMBALANCE', MLPClassifier(hidden_layer_sizes=(200,), max_iter=10000),X_train,y_train,X_test,y_test))
 MLPclassifier.append(('MLPClassifier SMOTE',MLPClassifier(hidden_layer_sizes=(200,), max_iter=10000),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
+performance(MLPclassifier)
 
 LSVC=[]
+
 LSVC.append(('LinearSVC IMBALANCE', LinearSVC(random_state=0, tol=1e-5),X_train,y_train,X_test,y_test))
 LSVC.append(('LinearSVC SMOTE',LinearSVC(random_state=0, tol=1e-5),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
-models = [LRmodel,RFmodel,NBmodel,DTmodel,KNNmodel,xgBOOST,MLPclassifier,LSVC]
-   
-def multiprocessing(x):
-    time.sleep(2)
-    performance(models[x])
+performance(LSVC)
 
 
-a = False
-from multiprocessing import Process as mp # bypass the GIL by allowing multiprocessing
-#https://docs.python.org/3/library/multiprocessing.html
-models = [LRmodel,RFmodel,NBmodel,DTmodel,KNNmodel,xgBOOST,MLPclassifier,LSVC]
+comparison={
+'Model': names,
+'Accuracy': accuracy_tests,
+'AUC': aucs_tests,
+'Precision Score' : precision_tests,
+'Recall Score': recall_tests, 
+'F1 Score': f1_score_tests,
+"Balanced Accuracy": balanced_accuracy_tests,
+"Top K Accuracy": top_k_accuracy_tests,
+"Cohen Kappa Score": cohen_kappa_tests,
+'MCC Score': mcc_score_tests,
+}
 
-def multiprocessing_func(x):
-    time.sleep(5)
-    performance(models[x])
+print(cl("Comparing performance of various Classifiers sorted by MCC Score : ",attrs=['bold'],color='blue'))
+comparison=pd.DataFrame(comparison)
+comparison.sort_values('MCC Score',ascending=False)
 
 
-a = False
-if __name__ == '__main__':
-    startTime = time.time()
-    processes = [] 
-    for i in range(0,8):
-        p = mp(target=multiprocessing_func,args=(i,))
-        processes.append(p)
-        p.start()
-    print('+'*70)
-    print(processes)
-    print('+'*70)
-    for process in processes:
-        process.join()
-        
-    print('Multi processing took {:10.2f} seconds or {:10.2f} minutes'.format((time.time() - startTime),(time.time() - startTime)/60))
-    a = True
-# COMPARE MCC SCORE FOR ALL DATASETS
-time.sleep(2)
-if(a):
-    comparison={
+# COMPARE Accuracy SCORE FOR ALL DATASETS
+comparison={
     'Model': names,
-    'Accuracy': accuracy_tests,
     'AUC': aucs_tests,
     'Precision Score' : precision_tests,
     'Recall Score': recall_tests, 
@@ -331,36 +327,17 @@ if(a):
     "Top K Accuracy": top_k_accuracy_tests,
     "Cohen Kappa Score": cohen_kappa_tests,
     'MCC Score': mcc_score_tests,
+    'Accuracy': accuracy_tests,
 }
 
-    print(cl("Comparing performance of various Classifiers sorted by MCC Score : ",attrs=['bold'],color='blue'))
-    comparison=pd.DataFrame(comparison)
-    comparison.sort_values('MCC Score',ascending=False)
+print(cl("Comparing performance of various Classifiers sorted by Accuracy : ",attrs=['bold'],color='blue'))
+comparison=pd.DataFrame(comparison)
+comparison.sort_values('Accuracy',ascending=False)
 
 
-    # COMPARE Accuracy SCORE FOR ALL DATASETS
-    comparison={
-        'Model': names,
-        'AUC': aucs_tests,
-        'Precision Score' : precision_tests,
-        'Recall Score': recall_tests, 
-        'F1 Score': f1_score_tests,
-        "Balanced Accuracy": balanced_accuracy_tests,
-        "Top K Accuracy": top_k_accuracy_tests,
-        "Cohen Kappa Score": cohen_kappa_tests,
-        'MCC Score': mcc_score_tests,
-        'Accuracy': accuracy_tests,
-    }
-
-    print(cl("Comparing performance of various Classifiers sorted by Accuracy : ",attrs=['bold'],color='blue'))
-    comparison=pd.DataFrame(comparison)
-    print(comparison.sort_values('Accuracy',ascending=False))
 
 
-    
 
-
-    print(cl('#',color='green')*40 + '\n')
-    print(cl('Time taken by the program is : {:10.2f}s or {:10.2f}min\n'.format((time.time() - total_time),(time.time() - total_time)/60),attrs = ['bold'],color='green'))
-    print(cl('#',color='green')*40 + '\n')
-
+print(cl('#',color='green')*40 + '\n')
+print(cl('Time taken by the program is : {:10.2f}s or {:10.2f}min\n'.format((time.time() - total_time),(time.time() - total_time)/60),attrs = ['bold'],color='green'))
+print(cl('#',color='green')*40 + '\n')

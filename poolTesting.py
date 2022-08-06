@@ -43,10 +43,7 @@ total_time = time.time()
 
 
 df = pd.read_csv(r'archive/creditcard.csv') #importing data
-df = df.loc[1:10000] # limit data to first 10.000 cols
-
-
-
+df = df.loc[1:50000] # limit data to first 10.000 cols
 
 
 
@@ -286,36 +283,34 @@ LSVC.append(('LinearSVC IMBALANCE', LinearSVC(random_state=0, tol=1e-5),X_train,
 LSVC.append(('LinearSVC SMOTE',LinearSVC(random_state=0, tol=1e-5),X_train_smote, y_train_smote, X_test_smote, y_test_smote))
 models = [LRmodel,RFmodel,NBmodel,DTmodel,KNNmodel,xgBOOST,MLPclassifier,LSVC]
    
-def multiprocessing(x):
-    time.sleep(2)
+def multiprocessing_func(x):
+    time.sleep(1)
     performance(models[x])
 
 
 a = False
-from multiprocessing import Process as mp # bypass the GIL by allowing multiprocessing
+from multiprocessing import Pool  # bypass the GIL by allowing multiprocessing
+#https://docs.python.org/3/library/multiprocessing.html
+models = [LRmodel,RFmodel,NBmodel,DTmodel,KNNmodel,xgBOOST,MLPclassifier,LSVC]
+
+
+
+
+from multiprocessing import Pool  # bypass the GIL by allowing multiprocessing
 #https://docs.python.org/3/library/multiprocessing.html
 models = [LRmodel,RFmodel,NBmodel,DTmodel,KNNmodel,xgBOOST,MLPclassifier,LSVC]
 
 def multiprocessing_func(x):
-    time.sleep(5)
+    time.sleep(2)
     performance(models[x])
-
 
 a = False
 if __name__ == '__main__':
     startTime = time.time()
-    processes = [] 
-    for i in range(0,8):
-        p = mp(target=multiprocessing_func,args=(i,))
-        processes.append(p)
-        p.start()
-    print('+'*70)
-    print(processes)
-    print('+'*70)
-    for process in processes:
-        process.join()
-        
-    print('Multi processing took {:10.2f} seconds or {:10.2f} minutes'.format((time.time() - startTime),(time.time() - startTime)/60))
+    pool = Pool()
+    pool.map(multiprocessing_func, range(0,8))
+    pool.close()
+    print('Pool Multi processing took {:10.2f} seconds or {:10.2f} minutes'.format((time.time() - startTime),(time.time() - startTime)/60))
     a = True
 # COMPARE MCC SCORE FOR ALL DATASETS
 time.sleep(2)
@@ -354,7 +349,7 @@ if(a):
 
     print(cl("Comparing performance of various Classifiers sorted by Accuracy : ",attrs=['bold'],color='blue'))
     comparison=pd.DataFrame(comparison)
-    print(comparison.sort_values('Accuracy',ascending=False))
+    comparison.sort_values('Accuracy',ascending=False)
 
 
     
